@@ -36,6 +36,7 @@ class WeatherServiceImpl implements WeatherService {
         'city': city,
         if (date != null) 'date': date.toIso8601String(),
       },
+      fromJson: (data) => Weather.fromJson(data as Map<String, dynamic>),
     );
   }
 
@@ -53,6 +54,9 @@ class WeatherServiceImpl implements WeatherService {
         'startDate': startDate.toIso8601String(),
         'endDate': endDate.toIso8601String(),
       },
+      fromJson: (data) => (data as List)
+          .map((item) => Weather.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -65,6 +69,9 @@ class WeatherServiceImpl implements WeatherService {
     return apiClient.get(
       endpoint: endpoint,
       queryParameters: {'city': city, 'page': page},
+      fromJson: (data) => (data as List)
+          .map((item) => Weather.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_nqk_entry_fe/bloc/weather-bloc/weather_bloc.dart';
+import 'package:go_nqk_entry_fe/bloc/weather-bloc/weather_events.dart';
+import 'package:go_nqk_entry_fe/bloc/weather-bloc/weather_states.dart';
 import 'package:go_nqk_entry_fe/view/home/search_form.dart';
-import 'package:go_nqk_entry_fe/view/home/weather_panel.dart';
+import 'package:go_nqk_entry_fe/view/home/weather-panel/weather_panel.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -18,19 +22,41 @@ class HomeScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          if (constraints.maxWidth > 600) {
-            return _buildWideHomeScreen();
-          } else {
-            return _buildNarrowHomeScreen();
+      body: BlocBuilder<WeatherBloc, WeatherStates>(
+        builder: (context, state) {
+          if (state is WeatherInitialState) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              // Ensure BLoC is available before reading
+              if (context.mounted) {
+                context.read<WeatherBloc>().add(
+                  FetchWeatherEvent(city: "London", page: 0),
+                );
+              }
+            });
+            return Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            );
+          } else if (state is WeatherErrorState) {
+            return Center(child: Text('Error: ${state.message}'));
           }
+
+          return LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              if (constraints.maxWidth > 600) {
+                return _buildWideHomeScreen(state);
+              } else {
+                return _buildNarrowHomeScreen(state);
+              }
+            },
+          );
         },
       ),
     );
   }
 
-  Widget _buildWideHomeScreen() {
+  Widget _buildWideHomeScreen(WeatherStates state) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -42,18 +68,22 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(width: 20),
 
           // RIGHT SIDE - Weather info
-          Expanded(flex: 3, child: WeatherPanel()),
+          Expanded(flex: 3, child: WeatherPanel(state: state)),
         ],
       ),
     );
   }
 
-  Widget _buildNarrowHomeScreen() {
+  Widget _buildNarrowHomeScreen(WeatherStates state) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [SearchForm(), const SizedBox(height: 20), WeatherPanel()],
+        children: [
+          SearchForm(),
+          const SizedBox(height: 20),
+          WeatherPanel(state: state),
+        ],
       ),
     );
   }
