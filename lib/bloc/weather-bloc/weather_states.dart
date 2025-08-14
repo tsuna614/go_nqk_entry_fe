@@ -10,12 +10,15 @@ abstract class WeatherStates extends Equatable {
 
 class WeatherInitialState extends WeatherStates {}
 
-class WeatherLoadingState extends WeatherStates {}
+class WeatherLoadingState
+    extends WeatherStates {} // this is for initial loading
 
 class WeatherLoadedState extends WeatherStates {
   final Weather currentWeather;
   final Map<int, List<Weather>> weatherMap;
   final int currentPage;
+  final bool
+  isLoadingMore; // this is for pagination, to show loading indicator when fetching more data
 
   // computed property to get the current 4 days weather list based on the current page
   List<Weather> get currentWeatherList {
@@ -26,22 +29,30 @@ class WeatherLoadedState extends WeatherStates {
     required this.currentWeather,
     required this.weatherMap,
     required this.currentPage,
+    this.isLoadingMore = false,
   });
 
-  // WeatherLoadedState copyWith({
-  //   Weather? currentWeather,
-  //   List<Weather>? weatherList,
-  //   int? currentPage,
-  // }) {
-  //   return WeatherLoadedState(
-  //     currentWeather: currentWeather ?? this.currentWeather,
-  //     weatherList: weatherList ?? this.weatherList,
-  //     currentPage: currentPage ?? this.currentPage,
-  //   );
-  // }
+  WeatherLoadedState copyWith({
+    Weather? currentWeather,
+    Map<int, List<Weather>>? weatherMap,
+    int? currentPage,
+    bool? isLoadingMore,
+  }) {
+    return WeatherLoadedState(
+      currentWeather: currentWeather ?? this.currentWeather,
+      weatherMap: weatherMap ?? this.weatherMap,
+      currentPage: currentPage ?? this.currentPage,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
 
-  // @override
-  // List<Object> get props => [weatherList, currentWeather];
+  @override
+  List<Object> get props => [
+    currentWeather,
+    weatherMap,
+    currentPage,
+    isLoadingMore,
+  ]; // THIS IS THE ANSWER TO THE QUESTION. IT IS USED TO COMPARE THE STATES AND CHECK IF THEY ARE EQUAL
 }
 
 class WeatherErrorState extends WeatherStates {

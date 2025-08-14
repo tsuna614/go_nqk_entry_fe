@@ -12,6 +12,7 @@ final getIt = GetIt.instance;
 final themeData = ThemeData(
   scaffoldBackgroundColor: const Color(0xFFD9EAF5),
   primaryColor: const Color(0xFF5B7BE4),
+  secondaryHeaderColor: Colors.white,
   colorScheme: ColorScheme.fromSwatch().copyWith(
     primary: const Color(0xFF5B7BE4),
     secondary: const Color(0xFF5B7BE4),

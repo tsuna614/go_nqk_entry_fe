@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_nqk_entry_fe/bloc/cubit/constraint_cubit.dart';
 import 'package:go_nqk_entry_fe/bloc/weather-bloc/weather_bloc.dart';
 import 'package:go_nqk_entry_fe/bloc/weather-bloc/weather_events.dart';
 import 'package:go_nqk_entry_fe/bloc/weather-bloc/weather_states.dart';
@@ -12,9 +13,9 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFD9EAF5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF5B7BE4),
+        backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         title: const Text(
           'Weather Dashboard',
@@ -33,23 +34,23 @@ class HomeScreen extends StatelessWidget {
                 );
               }
             });
-            return Center(
-              child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            );
           } else if (state is WeatherErrorState) {
             return Center(child: Text('Error: ${state.message}'));
           }
 
-          return LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              if (constraints.maxWidth > 600) {
-                return _buildWideHomeScreen(state);
-              } else {
-                return _buildNarrowHomeScreen(state);
-              }
-            },
+          return BlocProvider(
+            create: (_) => ConstraintsCubit(),
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                context.read<ConstraintsCubit>().setConstraints(constraints);
+
+                if (constraints.maxWidth > 600) {
+                  return _buildWideHomeScreen(state);
+                } else {
+                  return _buildNarrowHomeScreen(state);
+                }
+              },
+            ),
           );
         },
       ),
@@ -57,7 +58,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildWideHomeScreen(WeatherStates state) {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

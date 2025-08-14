@@ -13,3 +13,12 @@ class FetchWeatherEvent extends WeatherEvents {
   @override
   List<Object?> get props => [city, page];
 }
+
+class ChangePageEvent extends WeatherEvents {
+  final int page;
+
+  ChangePageEvent({required this.page});
+
+  @override
+  List<Object?> get props => [page];
+}

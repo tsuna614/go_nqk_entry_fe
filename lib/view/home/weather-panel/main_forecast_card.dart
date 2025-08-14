@@ -9,23 +9,31 @@ class MainForecastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state is WeatherLoadingState) {
-      return buildForecastCardShimmer();
+    if (state is WeatherLoadingState || state is WeatherInitialState) {
+      return buildForecastCardShimmer(context);
     } else if (state is WeatherLoadedState) {
       final weatherData = (state as WeatherLoadedState).currentWeather;
-      return buildForecastCard(weatherData);
+      return buildForecastCard(
+        context,
+        weatherData,
+        (state as WeatherLoadedState).currentPage,
+      );
     } else {
       return const Center(child: Text('No weather data available'));
     }
   }
 
-  Widget buildForecastCard(Weather weatherData) {
+  Widget buildForecastCard(
+    BuildContext context,
+    Weather weatherData,
+    int currentPage,
+  ) {
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF5B7BE4),
+        color: Theme.of(context).primaryColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -36,8 +44,8 @@ class MainForecastCard extends StatelessWidget {
             children: [
               Text(
                 '${weatherData.cityName} (${formatter.format(weatherData.dateTime)})',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).secondaryHeaderColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -45,35 +53,38 @@ class MainForecastCard extends StatelessWidget {
               const SizedBox(height: 13),
               Text(
                 'Temperature: ${weatherData.temperature}°C',
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).secondaryHeaderColor),
               ),
               const SizedBox(height: 8),
               Text(
                 'Wind: ${weatherData.windSpeed} M/S',
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).secondaryHeaderColor),
               ),
               const SizedBox(height: 8),
               Text(
                 'Humidity: ${weatherData.humidity}%',
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).secondaryHeaderColor),
               ),
             ],
           ),
           Column(
             children: [
-              // Icon(weatherData.icon, color: Colors.white, size: 48),
+              // Icon(weatherData.icon, color: Theme.of(context).secondaryHeaderColor, size: 48),
               Image.network(
                 'https:${weatherData.iconUrl}',
                 width: 48,
                 height: 48,
                 errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.error, color: Colors.white);
+                  return Icon(
+                    Icons.error,
+                    color: Theme.of(context).secondaryHeaderColor,
+                  );
                 },
               ),
               const SizedBox(height: 4),
               Text(
                 weatherData.condition,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).secondaryHeaderColor),
               ),
             ],
           ),
@@ -82,11 +93,11 @@ class MainForecastCard extends StatelessWidget {
     );
   }
 
-  Widget buildForecastCardShimmer() {
+  Widget buildForecastCardShimmer(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[300],
+        color: Theme.of(context).primaryColor,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

@@ -9,42 +9,64 @@ class WeatherBloc extends Bloc<WeatherEvents, WeatherStates> {
 
   WeatherBloc({required this.weatherService}) : super(WeatherInitialState()) {
     on<FetchWeatherEvent>(_onFetchWeather);
+    on<ChangePageEvent>(_onChangePage);
   }
 
   Future<void> _onFetchWeather(
     FetchWeatherEvent event,
     Emitter<WeatherStates> emit,
   ) async {
-    emit(WeatherLoadingState());
+    if (state is WeatherLoadedState) {
+      emit((state as WeatherLoadedState).copyWith(isLoadingMore: true));
+    } else {
+      emit(WeatherLoadingState());
+    }
+
+    // CASE 1: If that page is already loaded, just update the page
+    if (state is WeatherLoadedState &&
+        (state as WeatherLoadedState).weatherMap.containsKey(event.page)) {
+      emit(
+        (state as WeatherLoadedState).copyWith(
+          currentPage: event.page,
+          isLoadingMore: false,
+        ),
+      );
+      // final loadedState = state as WeatherLoadedState;
+      // emit(
+      //   WeatherLoadedState(
+      //     currentWeather: loadedState.currentWeather,
+      //     weatherMap: loadedState.weatherMap,
+      //     currentPage: event.page,
+      //     isLoadingMore: false,
+      //   ),
+      // );
+      return;
+    }
+
     try {
       final response = await weatherService.getWeatherByPage(
         city: event.city,
         page: event.page,
       );
 
-      print('Response status code: ${response.statusCode}');
-
       if (response.statusCode == 200 && response.data != null) {
         final weatherList = response.data!;
 
         if (state is WeatherLoadedState) {
-          // if the state is already loaded, keep the old currentWeather
-          final current = (state as WeatherLoadedState).currentWeather;
-          // update the weatherMap with the new weatherList
+          // CASE 2: Load new data into the existing map, keeping currentWeather, only change the currentPage
           Map<int, List<Weather>> weatherMap =
               (state as WeatherLoadedState).weatherMap;
           weatherMap[event.page] = weatherList;
 
           emit(
-            WeatherLoadedState(
-              currentWeather: current,
+            (state as WeatherLoadedState).copyWith(
               weatherMap: weatherMap,
               currentPage: event.page,
+              isLoadingMore: false,
             ),
           );
         } else {
-          // if the state is not loaded (first time fetching), set the first item as currentWeather
-          // (because page = 0 so the first item is the current date)
+          // CASE 3: When first loaded, no previous data. currentPage is 0 and currentWeather is set to the first item
           Map<int, List<Weather>> weatherMap = {};
           weatherMap[event.page] = weatherList;
 
@@ -63,6 +85,19 @@ class WeatherBloc extends Bloc<WeatherEvents, WeatherStates> {
     } catch (e) {
       print('Exception occurred: $e');
       emit(WeatherInitialState());
+    }
+  }
+
+  void _onChangePage(ChangePageEvent event, Emitter<WeatherStates> emit) async {
+    if (state is WeatherLoadedState) {
+      final loadedState = state as WeatherLoadedState;
+      emit(
+        WeatherLoadedState(
+          currentWeather: loadedState.weatherMap[event.page]!.first,
+          weatherMap: loadedState.weatherMap,
+          currentPage: event.page,
+        ),
+      );
     }
   }
 }
