@@ -80,10 +80,18 @@ class WeatherPanel extends StatelessWidget {
           ),
           Column(
             children: [
-              Icon(weather.icon, color: Colors.white, size: 48),
+              // Icon(weather.icon, color: Colors.white, size: 48),
+              Image.network(
+                'https:${weather.iconUrl}',
+                width: 48,
+                height: 48,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.error, color: Colors.white);
+                },
+              ),
               const SizedBox(height: 4),
               Text(
-                weather.condition.name,
+                weather.condition,
                 style: const TextStyle(color: Colors.white),
               ),
             ],
@@ -115,7 +123,15 @@ class WeatherPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Icon(weather.icon, color: Colors.white, size: 32),
+          // Icon(weather.icon, color: Colors.white, size: 32),
+          Image.network(
+            'https:${weather.iconUrl}',
+            width: 32,
+            height: 32,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(Icons.error, color: Colors.white);
+            },
+          ),
           const SizedBox(height: 8),
           Text(
             'Temp: ${weather.temperature}',
