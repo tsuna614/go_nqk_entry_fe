@@ -2,8 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_nqk_entry_fe/bloc/subscribe-bloc/subscribe_bloc.dart';
 import 'package:go_nqk_entry_fe/bloc/weather-bloc/weather_bloc.dart';
 import 'package:go_nqk_entry_fe/services/api_client.dart';
+import 'package:go_nqk_entry_fe/services/subscribe_service.dart';
 import 'package:go_nqk_entry_fe/services/weather_service.dart';
 import 'package:go_nqk_entry_fe/view/tabs_screen.dart';
 
@@ -41,6 +43,7 @@ void setupLocator() {
   final apiClient = ApiClient(dio);
 
   getIt.registerLazySingleton(() => WeatherServiceImpl(apiClient));
+  getIt.registerLazySingleton(() => SubscribeServiceImpl(apiClient));
 }
 
 void main() {
@@ -58,6 +61,10 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) =>
               WeatherBloc(weatherService: getIt<WeatherServiceImpl>()),
+        ),
+        BlocProvider(
+          create: (context) =>
+              SubscribeBloc(subscribeService: getIt<SubscribeServiceImpl>()),
         ),
       ],
       child: MaterialApp(
