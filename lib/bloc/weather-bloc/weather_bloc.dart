@@ -16,7 +16,9 @@ class WeatherBloc extends Bloc<WeatherEvents, WeatherStates> {
     FetchWeatherEvent event,
     Emitter<WeatherStates> emit,
   ) async {
-    if (state is WeatherLoadedState) {
+    if (state is WeatherLoadedState &&
+        (state as WeatherLoadedState).city.trim().toLowerCase() ==
+            event.city.trim().toLowerCase()) {
       emit((state as WeatherLoadedState).copyWith(isLoadingMore: true));
     } else {
       emit(WeatherLoadingState());
@@ -72,6 +74,7 @@ class WeatherBloc extends Bloc<WeatherEvents, WeatherStates> {
 
           emit(
             WeatherLoadedState(
+              city: event.city,
               currentWeather: weatherList.first,
               weatherMap: weatherMap,
               currentPage: event.page,
@@ -90,14 +93,16 @@ class WeatherBloc extends Bloc<WeatherEvents, WeatherStates> {
 
   void _onChangePage(ChangePageEvent event, Emitter<WeatherStates> emit) async {
     if (state is WeatherLoadedState) {
-      final loadedState = state as WeatherLoadedState;
-      emit(
-        WeatherLoadedState(
-          currentWeather: loadedState.weatherMap[event.page]!.first,
-          weatherMap: loadedState.weatherMap,
-          currentPage: event.page,
-        ),
-      );
+      // final loadedState = state as WeatherLoadedState;
+      // emit(
+      //   WeatherLoadedState(
+      //     city: loadedState.city,
+      //     currentWeather: loadedState.weatherMap[event.page]!.first,
+      //     weatherMap: loadedState.weatherMap,
+      //     currentPage: event.page,
+      //   ),
+      // );
+      emit((state as WeatherLoadedState).copyWith(currentPage: event.page));
     }
   }
 }

@@ -24,8 +24,16 @@ class _HorizontalForecastCardsState extends State<HorizontalForecastCards> {
         ? (widget.state as WeatherLoadedState).currentPage + 1
         : (widget.state as WeatherLoadedState).currentPage - 1);
 
+    if (changedPage >= 4) {
+      // temporarily hardcoded limit, because we know the weather API won't return more than 14 days forecast
+      return;
+    }
+
     context.read<WeatherBloc>().add(
-      FetchWeatherEvent(city: "London", page: changedPage),
+      FetchWeatherEvent(
+        city: (widget.state as WeatherLoadedState).city,
+        page: changedPage,
+      ),
     );
   }
 

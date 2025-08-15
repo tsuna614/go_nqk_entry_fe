@@ -14,6 +14,7 @@ class WeatherLoadingState
     extends WeatherStates {} // this is for initial loading
 
 class WeatherLoadedState extends WeatherStates {
+  final String city;
   final Weather currentWeather;
   final Map<int, List<Weather>> weatherMap;
   final int currentPage;
@@ -26,6 +27,7 @@ class WeatherLoadedState extends WeatherStates {
   }
 
   const WeatherLoadedState({
+    required this.city,
     required this.currentWeather,
     required this.weatherMap,
     required this.currentPage,
@@ -39,6 +41,7 @@ class WeatherLoadedState extends WeatherStates {
     bool? isLoadingMore,
   }) {
     return WeatherLoadedState(
+      city: city,
       currentWeather: currentWeather ?? this.currentWeather,
       weatherMap: weatherMap ?? this.weatherMap,
       currentPage: currentPage ?? this.currentPage,
@@ -48,6 +51,7 @@ class WeatherLoadedState extends WeatherStates {
 
   @override
   List<Object> get props => [
+    city,
     currentWeather,
     weatherMap,
     currentPage,
