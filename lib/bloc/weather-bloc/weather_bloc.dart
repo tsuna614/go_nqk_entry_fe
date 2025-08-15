@@ -83,11 +83,11 @@ class WeatherBloc extends Bloc<WeatherEvents, WeatherStates> {
         }
       } else {
         print('Error fetching weather data');
-        emit(WeatherInitialState());
+        emit(WeatherErrorState("Failed to fetch weather data"));
       }
     } catch (e) {
       print('Exception occurred: $e');
-      emit(WeatherInitialState());
+      emit(WeatherErrorState("An error occurred while fetching weather data"));
     }
   }
 

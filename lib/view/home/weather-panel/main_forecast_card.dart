@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_nqk_entry_fe/bloc/weather-bloc/weather_bloc.dart';
 import 'package:go_nqk_entry_fe/bloc/weather-bloc/weather_states.dart';
 import 'package:go_nqk_entry_fe/models/weather_model.dart';
 import 'package:intl/intl.dart';
 
 class MainForecastCard extends StatelessWidget {
-  final WeatherStates state;
-  const MainForecastCard({super.key, required this.state});
+  const MainForecastCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    if (state is WeatherLoadingState || state is WeatherInitialState) {
-      return buildForecastCardShimmer(context);
-    } else if (state is WeatherLoadedState) {
-      final weatherData = (state as WeatherLoadedState).currentWeather;
-      return buildForecastCard(
-        context,
-        weatherData,
-        (state as WeatherLoadedState).currentPage,
-      );
-    } else {
-      return const Center(child: Text('No weather data available'));
-    }
+    return BlocBuilder<WeatherBloc, WeatherStates>(
+      builder: (context, state) {
+        if (state is WeatherLoadingState ||
+            state is WeatherInitialState ||
+            state is WeatherErrorState) {
+          return buildForecastCardShimmer(context);
+        } else if (state is WeatherLoadedState) {
+          final weatherData = state.currentWeather;
+          return buildForecastCard(context, weatherData, state.currentPage);
+        } else {
+          return const Center(child: Text('No weather data available'));
+        }
+      },
+    );
   }
 
   Widget buildForecastCard(

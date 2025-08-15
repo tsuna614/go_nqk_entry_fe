@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_nqk_entry_fe/bloc/weather-bloc/weather_states.dart';
 import 'package:go_nqk_entry_fe/view/home/weather-panel/horizontal_forecast_cards.dart';
 import 'package:go_nqk_entry_fe/view/home/weather-panel/main_forecast_card.dart';
 
 class WeatherPanel extends StatelessWidget {
-  final WeatherStates state;
-  const WeatherPanel({super.key, required this.state});
+  const WeatherPanel({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +11,7 @@ class WeatherPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // The main big forecast card
-        MainForecastCard(state: state),
+        MainForecastCard(),
 
         const SizedBox(height: 20),
 
@@ -24,7 +22,7 @@ class WeatherPanel extends StatelessWidget {
 
         const SizedBox(height: 10),
 
-        HorizontalForecastCards(state: state),
+        HorizontalForecastCards(),
 
         // // Horizontal list of forecast cards
         // SingleChildScrollView(

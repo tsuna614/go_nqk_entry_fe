@@ -8,8 +8,7 @@ import 'package:go_nqk_entry_fe/models/weather_model.dart';
 import 'package:intl/intl.dart';
 
 class HorizontalForecastCards extends StatefulWidget {
-  final WeatherStates state;
-  const HorizontalForecastCards({super.key, required this.state});
+  const HorizontalForecastCards({super.key});
 
   @override
   State<HorizontalForecastCards> createState() =>
@@ -17,12 +16,12 @@ class HorizontalForecastCards extends StatefulWidget {
 }
 
 class _HorizontalForecastCardsState extends State<HorizontalForecastCards> {
-  void changePage(bool isForward) async {
-    if (widget.state is! WeatherLoadedState) return;
+  void changePage(bool isForward, WeatherStates state) async {
+    if (state is! WeatherLoadedState) return;
 
     int changedPage = (isForward
-        ? (widget.state as WeatherLoadedState).currentPage + 1
-        : (widget.state as WeatherLoadedState).currentPage - 1);
+        ? state.currentPage + 1
+        : state.currentPage - 1);
 
     if (changedPage >= 4) {
       // temporarily hardcoded limit, because we know the weather API won't return more than 14 days forecast
@@ -30,102 +29,100 @@ class _HorizontalForecastCardsState extends State<HorizontalForecastCards> {
     }
 
     context.read<WeatherBloc>().add(
-      FetchWeatherEvent(
-        city: (widget.state as WeatherLoadedState).city,
-        page: changedPage,
-      ),
+      FetchWeatherEvent(city: state.city, page: changedPage),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, size: 40),
-          onPressed: () => changePage(false),
-        ),
-        Flexible(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              final offsetAnimation = Tween<Offset>(
-                begin: Offset(0, 1),
-                end: Offset.zero,
-              ).animate(animation);
-
-              return SlideTransition(
-                position: offsetAnimation,
-                child: FadeTransition(opacity: animation, child: child),
-              );
-            },
-            child: Builder(
-              key: ValueKey<int>(
-                widget.state is WeatherLoadedState
-                    ? (widget.state as WeatherLoadedState).currentPage
-                    : -1,
-              ),
-              builder: (context) {
-                final constraints = context.watch<ConstraintsCubit>().state;
-
-                if (constraints == null) return const SizedBox();
-
-                if (constraints.maxWidth > 600) {
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        if (widget.state is WeatherLoadingState ||
-                            widget.state is WeatherInitialState)
-                          ...List.generate(
-                            4,
-                            (index) => buildShimmerForecastCard(),
-                          )
-                        else if (widget.state is WeatherLoadedState)
-                          ...((widget.state as WeatherLoadedState)
-                              .currentWeatherList
-                              .map((weather) => buildForecastCard(weather)))
-                        else
-                          const Center(
-                            child: Text('No weather data available'),
-                          ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return GridView.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      if (widget.state is WeatherLoadingState ||
-                          widget.state is WeatherInitialState)
-                        ...List.generate(
-                          4,
-                          (index) => buildShimmerForecastCard(),
-                        )
-                      else if (widget.state is WeatherLoadedState)
-                        ...((widget.state as WeatherLoadedState)
-                            .currentWeatherList
-                            .map((weather) => buildNarrowForecastCard(weather)))
-                      else
-                        const Center(child: Text('No weather data available')),
-                    ],
-                  );
-                }
-              },
+    return BlocBuilder<WeatherBloc, WeatherStates>(
+      builder: (context, state) {
+        return Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back_rounded, size: 40),
+              onPressed: () => changePage(false, state),
             ),
-          ),
-        ),
+            Flexible(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  final offsetAnimation = Tween<Offset>(
+                    begin: Offset(0, 1),
+                    end: Offset.zero,
+                  ).animate(animation);
 
-        IconButton(
-          icon: const Icon(Icons.arrow_forward_rounded, size: 40),
-          onPressed: () => changePage(true),
-        ),
-      ],
+                  return SlideTransition(
+                    position: offsetAnimation,
+                    child: FadeTransition(opacity: animation, child: child),
+                  );
+                },
+                child: Builder(
+                  key: ValueKey<int>(
+                    state is WeatherLoadedState ? state.currentPage : -1,
+                  ),
+                  builder: (context) {
+                    final constraints = context.watch<ConstraintsCubit>().state;
+
+                    if (constraints == null) return const SizedBox();
+
+                    if (constraints.maxWidth > 600) {
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            if (state is WeatherLoadingState ||
+                                state is WeatherInitialState ||
+                                state is WeatherErrorState)
+                              ...List.generate(
+                                4,
+                                (index) => buildShimmerForecastCard(),
+                              )
+                            else if (state is WeatherLoadedState)
+                              ...(state.currentWeatherList.map(
+                                (weather) => buildForecastCard(weather),
+                              )),
+                          ],
+                        ),
+                      );
+                    } else {
+                      return GridView.count(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          if (state is WeatherLoadingState ||
+                              state is WeatherInitialState)
+                            ...List.generate(
+                              4,
+                              (index) => buildShimmerForecastCard(),
+                            )
+                          else if (state is WeatherLoadedState)
+                            ...(state.currentWeatherList.map(
+                              (weather) => buildNarrowForecastCard(weather),
+                            ))
+                          else
+                            const Center(
+                              child: Text('No weather data available'),
+                            ),
+                        ],
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+
+            IconButton(
+              icon: const Icon(Icons.arrow_forward_rounded, size: 40),
+              onPressed: () => changePage(true, state),
+            ),
+          ],
+        );
+      },
     );
   }
 

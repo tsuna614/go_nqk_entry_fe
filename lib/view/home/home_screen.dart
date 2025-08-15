@@ -23,7 +23,17 @@ class HomeScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: BlocBuilder<WeatherBloc, WeatherStates>(
+      body: BlocConsumer<WeatherBloc, WeatherStates>(
+        listener: (context, state) {
+          if (state is WeatherErrorState) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is WeatherInitialState) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -34,10 +44,7 @@ class HomeScreen extends StatelessWidget {
                 );
               }
             });
-          } else if (state is WeatherErrorState) {
-            return Center(child: Text('Error: ${state.message}'));
           }
-
           return BlocProvider(
             create: (_) => ConstraintsCubit(),
             child: LayoutBuilder(
@@ -45,9 +52,9 @@ class HomeScreen extends StatelessWidget {
                 context.read<ConstraintsCubit>().setConstraints(constraints);
 
                 if (constraints.maxWidth > 600) {
-                  return _buildWideHomeScreen(state);
+                  return _buildWideHomeScreen();
                 } else {
-                  return _buildNarrowHomeScreen(state);
+                  return _buildNarrowHomeScreen();
                 }
               },
             ),
@@ -57,7 +64,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWideHomeScreen(WeatherStates state) {
+  Widget _buildWideHomeScreen() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -69,22 +76,18 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(width: 20),
 
           // RIGHT SIDE - Weather info
-          Expanded(flex: 3, child: WeatherPanel(state: state)),
+          Expanded(flex: 3, child: WeatherPanel()),
         ],
       ),
     );
   }
 
-  Widget _buildNarrowHomeScreen(WeatherStates state) {
+  Widget _buildNarrowHomeScreen() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SearchForm(),
-          const SizedBox(height: 20),
-          WeatherPanel(state: state),
-        ],
+        children: [SearchForm(), const SizedBox(height: 20), WeatherPanel()],
       ),
     );
   }
