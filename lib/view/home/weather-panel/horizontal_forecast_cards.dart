@@ -45,30 +45,64 @@ class _HorizontalForecastCardsState extends State<HorizontalForecastCards> {
           icon: const Icon(Icons.arrow_back_rounded, size: 40),
           onPressed: () => changePage(false),
         ),
-
-        // Wrap LayoutBuilder in Flexible instead of inside it
         Flexible(
-          child: Builder(
-            builder: (context) {
-              final constraints = context.watch<ConstraintsCubit>().state;
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              final offsetAnimation = Tween<Offset>(
+                begin: Offset(0, 1),
+                end: Offset.zero,
+              ).animate(animation);
 
-              if (constraints == null) {
-                // Fallback while constraints are not yet set
-                return const SizedBox();
-              }
+              return SlideTransition(
+                position: offsetAnimation,
+                child: FadeTransition(opacity: animation, child: child),
+              );
+            },
+            child: Builder(
+              key: ValueKey<int>(
+                widget.state is WeatherLoadedState
+                    ? (widget.state as WeatherLoadedState).currentPage
+                    : -1,
+              ),
+              builder: (context) {
+                final constraints = context.watch<ConstraintsCubit>().state;
 
-              if (constraints.maxWidth > 600) {
-                // Wide screen: horizontal scroll
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                if (constraints == null) return const SizedBox();
+
+                if (constraints.maxWidth > 600) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (widget.state is WeatherLoadingState ||
+                            widget.state is WeatherInitialState)
+                          ...List.generate(
+                            4,
+                            (index) => buildShimmerForecastCard(),
+                          )
+                        else if (widget.state is WeatherLoadedState)
+                          ...((widget.state as WeatherLoadedState)
+                              .currentWeatherList
+                              .map((weather) => buildForecastCard(weather)))
+                        else
+                          const Center(
+                            child: Text('No weather data available'),
+                          ),
+                      ],
+                    ),
+                  );
+                } else {
+                  return GridView.count(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     children: [
                       if (widget.state is WeatherLoadingState ||
-                          widget.state is WeatherInitialState ||
-                          (widget.state is WeatherLoadedState &&
-                              (widget.state as WeatherLoadedState)
-                                  .isLoadingMore))
+                          widget.state is WeatherInitialState)
                         ...List.generate(
                           4,
                           (index) => buildShimmerForecastCard(),
@@ -76,34 +110,14 @@ class _HorizontalForecastCardsState extends State<HorizontalForecastCards> {
                       else if (widget.state is WeatherLoadedState)
                         ...((widget.state as WeatherLoadedState)
                             .currentWeatherList
-                            .map((weather) => buildForecastCard(weather)))
+                            .map((weather) => buildNarrowForecastCard(weather)))
                       else
                         const Center(child: Text('No weather data available')),
                     ],
-                  ),
-                );
-              } else {
-                // Small screen: grid
-                return GridView.count(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    if (widget.state is WeatherLoadingState ||
-                        widget.state is WeatherInitialState)
-                      ...List.generate(4, (index) => buildShimmerForecastCard())
-                    else if (widget.state is WeatherLoadedState)
-                      ...((widget.state as WeatherLoadedState)
-                          .currentWeatherList
-                          .map((weather) => buildNarrowForecastCard(weather)))
-                    else
-                      const Center(child: Text('No weather data available')),
-                  ],
-                );
-              }
-            },
+                  );
+                }
+              },
+            ),
           ),
         ),
 
